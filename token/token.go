@@ -6,6 +6,19 @@ type Token struct{
 	Type TokenType
 	Literal string
 }
+// 予約語
+var keyword = map[string]TokenType{
+	"fn": FUNCTION,
+	"let": LET,
+}
+
+// 予約語判定
+func LookupIdent(ident string) TokenType{
+	if tok, ok := keyword[ident]; ok{
+		return tok
+	}
+	return INDENT
+}
 
 const (
 	ILLEGAL = "ILLEGAL" //　未知なもの
