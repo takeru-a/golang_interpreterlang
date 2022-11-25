@@ -2,19 +2,25 @@ package token
 
 type TokenType string
 
-type Token struct{
-	Type TokenType
+type Token struct {
+	Type    TokenType
 	Literal string
 }
+
 // 予約語
 var keyword = map[string]TokenType{
-	"fn": FUNCTION,
+	"fn":  FUNCTION,
 	"let": LET,
+	"true": TRUE,
+	"false": FALSE,
+	"if": IF,
+	"else": ELSE,
+	"return":RETURN,
 }
 
 // 予約語判定
-func LookupIdent(ident string) TokenType{
-	if tok, ok := keyword[ident]; ok{
+func LookupIdent(ident string) TokenType {
+	if tok, ok := keyword[ident]; ok {
 		return tok
 	}
 	return INDENT
@@ -22,23 +28,36 @@ func LookupIdent(ident string) TokenType{
 
 const (
 	ILLEGAL = "ILLEGAL" //　未知なもの
-	EOF = "EOF" //ファイル終端
+	EOF     = "EOF"     //ファイル終端
 
 	INDENT = "INDENT"
-	INT = "INT"
+	INT    = "INT"
 
 	// 演算子
-	ASSIGN = "="
-	PLUS = "+"
+	ASSIGN   = "="
+	PLUS     = "+"
+	MINUS    = "-"
+	BANG     = "!"
+	ASTERISK = "*"
+	SLASH    = "/"
+	EQ = "=="
+	NOT_EQ = "!="
 
-	COMMA = ","
+	LT        = "<"
+	GT        = ">"
+	COMMA     = ","
 	SEMICOLON = ";"
 
-	LPAREN ="("
+	LPAREN = "("
 	RPAREN = ")"
 	LBRACE = "{"
 	RBRACE = "}"
 
 	FUNCTION = "FUNCTION"
-	LET = "LET"
+	LET      = "LET"
+	TRUE = "TRUE"
+	FALSE = "FALSE"
+	IF = "IF"
+	ELSE = "ELSE"
+	RETURN = "RETURN"
 )
