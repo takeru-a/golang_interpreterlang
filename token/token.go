@@ -9,13 +9,13 @@ type Token struct {
 
 // 予約語
 var keyword = map[string]TokenType{
-	"fn":  FUNCTION,
-	"let": LET,
-	"true": TRUE,
-	"false": FALSE,
-	"if": IF,
-	"else": ELSE,
-	"return":RETURN,
+	"fn":     FUNCTION,
+	"let":    LET,
+	"true":   TRUE,
+	"false":  FALSE,
+	"if":     IF,
+	"else":   ELSE,
+	"return": RETURN,
 }
 
 // 予約語判定
@@ -30,7 +30,7 @@ const (
 	ILLEGAL = "ILLEGAL" //　未知なもの
 	EOF     = "EOF"     //ファイル終端
 
-	INDENT = "INDENT"
+	INDENT = "INDENT" // add, x, yなど　変数、定数、関数の名前
 	INT    = "INT"
 
 	// 演算子
@@ -40,8 +40,8 @@ const (
 	BANG     = "!"
 	ASTERISK = "*"
 	SLASH    = "/"
-	EQ = "=="
-	NOT_EQ = "!="
+	EQ       = "=="
+	NOT_EQ   = "!="
 
 	LT        = "<"
 	GT        = ">"
@@ -55,9 +55,10 @@ const (
 
 	FUNCTION = "FUNCTION"
 	LET      = "LET"
-	TRUE = "TRUE"
-	FALSE = "FALSE"
-	IF = "IF"
-	ELSE = "ELSE"
-	RETURN = "RETURN"
+	TRUE     = "TRUE"
+	FALSE    = "FALSE"
+	IF       = "IF"
+	ELSE     = "ELSE"
+	RETURN   = "RETURN"
 )
+
