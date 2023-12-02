@@ -1,55 +1,128 @@
 package ast
 
-import "github.com/takeru-a/golang_interpreterlang/token"
+import (
+	"bytes"
+	"github.com/takeru-a/golang_interpreterlang/token"
+)
 
-type Node interface{
+// 抽象構文木(abstract syntax tree)のノードのインターフェース
+type Node interface {
+	// トークンリテラルを返す
+	// トークンの具体的な文字列表現
 	TokenLiteral() string
+
+	// nodeの内容を文字列で返す
+	String() string
 }
 
-type Statement interface{
+// 文のインターフェース
+type Statement interface {
 	Node
 	statementNode()
 }
 
-type Expression interface{
+// 式のインターフェース
+type Expression interface {
 	Node
 	expressionNode()
 }
 
-type Program struct{
+// プログラム全体を表す
+type Program struct {
 	Statements []Statement
 }
 
+// 文の構文解析
+type ExpressionStatement struct {
+	Token      token.Token // 式の最初のトークン
+	Expression Expression  // 式
+}
+
+func (es *ExpressionStatement) statementNode()       {}
+func (es *ExpressionStatement) TokenLiteral() string { return es.Token.Literal }
+
+// 式の文字列表現を返す
+func (es *ExpressionStatement) String() string {
+	if es.Expression != nil {
+		return es.Expression.String()
+	}
+	return ""
+}
+
 // 再帰する
-func (p *Program) TokenLiteral() string{
-	if len(p.Statements) > 0{
+// トークンの種類によって、構文解析関数を呼び出す
+func (p *Program) TokenLiteral() string {
+	if len(p.Statements) > 0 {
 		return p.Statements[0].TokenLiteral()
-	}else{
+	} else {
 		return ""
 	}
 }
 
+// プログラムの文字列表現を返す
+func (p *Program) String() string {
+	var out bytes.Buffer
+
+	for _, s := range p.Statements {
+		out.WriteString(s.String())
+	}
+	return out.String()
+}
+
+// let文の構文解析
 type LetStatement struct {
 	Token token.Token
-	Name *Indetifier
+	Name  *Indetifier
 	Value Expression
 }
 
-func (ls *LetStatement) statementNode(){}
-func (ls *LetStatement) TokenLiteral() string {return ls.Token.Literal}
+func (ls *LetStatement) statementNode()       {}
+func (ls *LetStatement) TokenLiteral() string { return ls.Token.Literal }
 
-type ReturnStatement struct{
-	Token token.Token
+// let x = 5;
+func (ls *LetStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(ls.TokenLiteral() + " ")
+	out.WriteString(ls.Name.String())
+	out.WriteString(" = ")
+
+	if ls.Value != nil {
+		out.WriteString(ls.Value.String())
+	}
+
+	out.WriteString(";")
+	return out.String()
+}
+
+// return文の構文解析
+type ReturnStatement struct {
+	Token       token.Token
 	ReturnValue Expression
 }
 
-func (rs *ReturnStatement) statementNode(){}
-func (rs *ReturnStatement) TokenLiteral() string{ return rs.Token.Literal}
+func (rs *ReturnStatement) statementNode()       {}
+func (rs *ReturnStatement) TokenLiteral() string { return rs.Token.Literal }
 
-type Indetifier struct{
+// return 5;
+func (rs *ReturnStatement) String() string {
+	var out bytes.Buffer
+	out.WriteString(rs.TokenLiteral() + " ")
+	if rs.ReturnValue != nil {
+		out.WriteString(rs.ReturnValue.String())
+	}
+	out.WriteString(";")
+	return out.String()
+}
+
+// 式の構文解析
+type Indetifier struct {
 	Token token.Token
 	Value string
 }
 
-func (i *Indetifier) expressionNode() {}
-func (i *Indetifier) TokenLiteral() string {return i.Token.Literal}
+func (i *Indetifier) expressionNode()      {}
+// プログラムが読み取る用
+func (i *Indetifier) TokenLiteral() string { return i.Token.Literal }
+// 人間が読む用
+func (i *Indetifier) String() string       { return i.Value }
