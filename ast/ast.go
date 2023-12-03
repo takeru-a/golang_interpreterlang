@@ -121,8 +121,62 @@ type Indetifier struct {
 	Value string
 }
 
-func (i *Indetifier) expressionNode()      {}
+func (i *Indetifier) expressionNode() {}
+
 // プログラムが読み取る用
 func (i *Indetifier) TokenLiteral() string { return i.Token.Literal }
+
 // 人間が読む用
-func (i *Indetifier) String() string       { return i.Value }
+func (i *Indetifier) String() string { return i.Value }
+
+// 整数リテラルの構文解析
+type IntegerLiteral struct {
+	Token token.Token
+	Value int64
+}
+
+func (il *IntegerLiteral) expressionNode()      {}
+func (il *IntegerLiteral) TokenLiteral() string { return il.Token.Literal }
+func (il *IntegerLiteral) String() string       { return il.String() }
+
+// 前置構文解析
+type PrefixExpression struct {
+	Token    token.Token // 前置トークン !, -
+	Operator string
+	Right    Expression
+}
+
+func (pe *PrefixExpression) expressionNode()      {}
+func (pe *PrefixExpression) TokenLiteral() string { return pe.Token.Literal }
+func (pe *PrefixExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(pe.Operator)
+	out.WriteString(pe.Right.String())
+	out.WriteString(")")
+
+	return out.String()
+}
+
+// 中置演算子の構文解析
+type InfixExpression struct {
+	Token    token.Token
+	Left     Expression
+	Operator string
+	Right    Expression
+}
+
+func (ie *InfixExpression) expressionNode()      {}
+func (ie *InfixExpression) TokenLiteral() string { return ie.Token.Literal }
+func (ie *InfixExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(ie.Left.String())
+	out.WriteString(" " + ie.Operator + " ")
+	out.WriteString(ie.Right.String())
+	out.WriteString(")")
+
+	return out.String()
+}

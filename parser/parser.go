@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/takeru-a/golang_interpreterlang/ast"
 	"github.com/takeru-a/golang_interpreterlang/lexer"
@@ -12,13 +13,24 @@ import (
 const (
 	_ int = iota
 	LOWEST
-	EQALS           // ==
-	LESSGREATER     // >  <
-	SUM             // +
-	PRODUCT         // *
-	PREFIX          // -x !x
-	CALL            // myFunction(x)
+	EQALS       // ==
+	LESSGREATER // >  <
+	SUM         // +
+	PRODUCT     // *
+	PREFIX      // -x !x
+	CALL        // myFunction(x)
 )
+
+var precedences = map[token.TokenType]int{
+	token.EQ:       EQALS,
+	token.NOT_EQ:   EQALS,
+	token.LT:       LESSGREATER,
+	token.GT:       LESSGREATER,
+	token.PLUS:     SUM,
+	token.MINUS:    SUM,
+	token.SLASH:    PRODUCT,
+	token.ASTERISK: PRODUCT,
+}
 
 type Parser struct {
 	l         *lexer.Lexer //字句解析器
@@ -54,13 +66,38 @@ func New(l *lexer.Lexer) *Parser {
 	// 前置構文解析関数の設定
 	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
 	p.registerPrefix(token.INDENT, p.parseIdentifier)
+	p.registerPrefix(token.INT, p.parseIntegerLiteral)
+	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
+	p.registerPrefix(token.BANG, p.parsePrefixExpression)
+
+	//　中置構文解析関数の設定
+	p.infixParseFns = make(map[token.TokenType]infixParseFn)
+	p.registerInfix(token.PLUS, p.parseInfixExpression)
+	p.registerInfix(token.MINUS, p.parseInfixExpression)
+	p.registerInfix(token.SLASH, p.parseInfixExpression)
+	p.registerInfix(token.ASTERISK, p.parseInfixExpression)
+	p.registerInfix(token.EQ, p.parseInfixExpression)
+	p.registerInfix(token.NOT_EQ, p.parseInfixExpression)
+	p.registerInfix(token.LT, p.parseInfixExpression)
+	p.registerInfix(token.GT, p.parseInfixExpression)
 
 	return p
 }
 
-// 識別子
-func (p *Parser) parseIdentifier() ast.Expression {
-	return &ast.Indetifier{Token: p.curToken, Value: p.curToken.Literal}
+// 次のトークンの優先度を返却する
+func (p *Parser) peekPrecedence() int {
+	if p, ok := precedences[p.peekToken.Type]; ok {
+		return p
+	}
+	return LOWEST
+}
+
+// 現在のトークンの優先度を返却する
+func (p *Parser) curPrecedence() int {
+	if p, ok := precedences[p.curToken.Type]; ok {
+		return p
+	}
+	return LOWEST
 }
 
 func (p *Parser) Errors() []string {
@@ -162,17 +199,41 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	return stmt
 }
 
+// 識別子
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Indetifier{Token: p.curToken, Value: p.curToken.Literal}
+}
+
+// 前置構文がないときのエラーメッセージを追加
+func (p *Parser) noPrefixParseFnError(t token.TokenType) {
+	msg := fmt.Sprintf("no prefix parse function for %s found", t)
+	p.errors = append(p.errors, msg)
+}
+
 // 識別子式
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 
 	// tokenに応じた関数
 	prefix := p.prefixParseFns[p.curToken.Type]
 	if prefix == nil {
+		p.noPrefixParseFnError(p.curToken.Type)
 		return nil
 	}
 
 	// !x, -xなど識別子の前置されているものを返却
 	leftExp := prefix()
+
+	// 次のtokenが優先度が高い場合、中置構文解析関数を呼び出す
+	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
+		infix := p.infixParseFns[p.peekToken.Type]
+		// 中置構文解析関数がない場合
+		if infix == nil {
+			return leftExp
+		}
+
+		p.nextToken()
+		leftExp = infix(leftExp)
+	}
 
 	return leftExp
 }
@@ -186,6 +247,52 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
-	
-	return stmt;
+
+	return stmt
+}
+
+// 整数リテラルの構文解析
+func (p *Parser) parseIntegerLiteral() ast.Expression {
+	lit := &ast.IntegerLiteral{Token: p.curToken}
+
+	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
+	if err != nil {
+		msg := fmt.Sprintf("could not parse %q as integer", p.curToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+
+	lit.Value = value
+
+	return lit
+}
+
+// 前置表現の構文解析
+func (p *Parser) parsePrefixExpression() ast.Expression {
+	expression := &ast.PrefixExpression{
+		Token:    p.curToken,
+		Operator: p.curToken.Literal,
+	}
+
+	p.nextToken()
+
+	expression.Right = p.parseExpression(PREFIX)
+
+	return expression
+}
+
+// 中置演算子の構文解析
+func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
+	expression := &ast.InfixExpression{
+		Token:    p.curToken,
+		Operator: p.curToken.Literal,
+		Left:     left,
+	}
+
+	precedences := p.curPrecedence()
+	p.nextToken()
+	// 中置演算子の右側の式を構文解析
+	expression.Right = p.parseExpression(precedences)
+
+	return expression
 }
