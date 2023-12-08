@@ -137,7 +137,7 @@ type IntegerLiteral struct {
 
 func (il *IntegerLiteral) expressionNode()      {}
 func (il *IntegerLiteral) TokenLiteral() string { return il.Token.Literal }
-func (il *IntegerLiteral) String() string       { return il.String() }
+func (il *IntegerLiteral) String() string       { return il.Token.Literal }
 
 // 前置構文解析
 type PrefixExpression struct {
@@ -178,5 +178,57 @@ func (ie *InfixExpression) String() string {
 	out.WriteString(ie.Right.String())
 	out.WriteString(")")
 
+	return out.String()
+}
+
+// 真偽値リテラルの構文解析
+type Boolean struct {
+	Token token.Token
+	Value bool
+}
+
+func(b *Boolean) expressionNode() {}
+func(b *Boolean) TokenLiteral() string { return b.Token.Literal }
+func(b *Boolean) String() string { return b.Token.Literal }
+
+// if文の構文解析
+type IfExpression struct {
+	Token token.Token   // 'if'トークン
+	Condition Expression // 条件
+	Consequence *BlockStatement  // ifの処理
+	Alternative *BlockStatement  // elseの処理
+}
+
+func (ie *IfExpression) expressionNode() {}
+func (ie *IfExpression) TokenLiteral() string { return ie.Token.Literal }
+func (ie *IfExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("if")
+	out.WriteString(ie.Condition.String())
+	out.WriteString(" ")
+	out.WriteString(ie.Condition.String())
+
+	if ie.Alternative != nil {
+		out.WriteString("else ")
+		out.WriteString(ie.Alternative.String())
+	}
+
+	return out.String()
+}
+
+type BlockStatement struct {
+	Token token.Token
+	Statements []Statement
+}
+
+func (bs *BlockStatement) expressionNode() {}
+func (bs *BlockStatement) TokenLiteral() string { return bs.Token.Literal }
+func (bs *BlockStatement) String() string {
+	var out bytes.Buffer
+
+	for _, s := range bs.Statements {
+		out.WriteString(s.String())
+	}
 	return out.String()
 }
