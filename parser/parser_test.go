@@ -80,6 +80,7 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool{
 	return true
 }
 
+// Return文の構文解析のテスト
 func TestReturnStatements(t *testing.T){
 	input := `
 	return 5;
