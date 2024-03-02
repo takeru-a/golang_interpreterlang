@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/takeru-a/golang_interpreterlang/evaluator"
 	"github.com/takeru-a/golang_interpreterlang/lexer"
 	"github.com/takeru-a/golang_interpreterlang/parser"
 )
@@ -13,7 +14,7 @@ const PROMPT = ">> "
 
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
-
+	fmt.Println(AQUAMARINE)
 	for {
 		fmt.Printf(PROMPT)
 		scanned := scanner.Scan()
@@ -31,8 +32,11 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		io.WriteString(out, program.String())
-		io.WriteString(out, "\n")
+		evaluated := evaluator.Eval(program)
+		if evaluated != nil {
+			io.WriteString(out, evaluated.Inspect())
+			io.WriteString(out, "\n")
+		}
 	}
 }
 
