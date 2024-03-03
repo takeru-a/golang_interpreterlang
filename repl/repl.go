@@ -7,6 +7,7 @@ import (
 
 	"github.com/takeru-a/golang_interpreterlang/evaluator"
 	"github.com/takeru-a/golang_interpreterlang/lexer"
+	"github.com/takeru-a/golang_interpreterlang/object"
 	"github.com/takeru-a/golang_interpreterlang/parser"
 )
 
@@ -14,7 +15,10 @@ const PROMPT = ">> "
 
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
+	env := object.NewEnvironment()
+
 	fmt.Println(AQUAMARINE)
+
 	for {
 		fmt.Printf(PROMPT)
 		scanned := scanner.Scan()
@@ -32,7 +36,7 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		evaluated := evaluator.Eval(program)
+		evaluated := evaluator.Eval(program, env)
 		if evaluated != nil {
 			io.WriteString(out, evaluated.Inspect())
 			io.WriteString(out, "\n")
@@ -53,7 +57,6 @@ const AQUAMARINE = `
 `
 
 func printParserErrors(out io.Writer, errors []string) {
-	io.WriteString(out, AQUAMARINE)
 	io.WriteString(out, "Error in Aquamarine script")
 	io.WriteString(out, " syntax errors:\n")
 	for _, msg := range errors {
