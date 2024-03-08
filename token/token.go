@@ -63,4 +63,7 @@ const (
 	IF       = "IF"
 	ELSE     = "ELSE"
 	RETURN   = "RETURN"
+
+	// 文字列
+	STRING = "STRING"
 )

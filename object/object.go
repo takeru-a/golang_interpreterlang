@@ -17,6 +17,9 @@ const (
 	RETURN_VALUE_OBJ = "RETURN_VALUE"
 	ERROR_OBJ = "ERROR"
 	FUNCTION_OBJ = "FUNCTION"
+	STRING_OBJ = "STRING"
+	BUILTIN_OBJ = "BUILTIN"
+	NULLSTRING_OBJ = "NULLSTRING"
 )
 
 type Object interface {
@@ -45,6 +48,11 @@ type NULL struct{}
 
 func (n *NULL) Type() ObjectType { return NULL_OBJ }
 func (n *NULL) Inspect() string { return "null" }
+
+type NULLSTRING struct{}
+
+func (ns *NULLSTRING) Type() ObjectType { return NULLSTRING_OBJ }
+func (ns *NULLSTRING) Inspect() string { return "" }
 
 // Return
 type ReturnValue struct {
@@ -87,3 +95,21 @@ func (fn *Function) Inspect() string {
 
 	return out.String()
 }
+
+// 文字列
+type String struct {
+	Value string
+}
+
+func (s *String) Type() ObjectType { return STRING_OBJ }
+func (s *String) Inspect() string { return s.Value }
+
+// 組み込み関数
+type BuiltinFunction func(args ...Object) Object
+type Builtin struct {
+	Fn BuiltinFunction
+}
+
+func (b *Builtin) Type() ObjectType { return BOOLEAN_OBJ }
+func (b *Builtin) Inspect() string { return "builtin function" }
+ 

@@ -285,3 +285,13 @@ func (ce *CallExpression) String() string {
 
 	return out.String()
 }
+
+// 文字列
+type StringLiteral struct {
+	Token token.Token
+	Value string
+}
+
+func (st StringLiteral) expressionNode() {}
+func (st StringLiteral) TokenLiteral() string { return st.Token.Literal }
+func (st StringLiteral) String() string { return st.Token.Literal }
